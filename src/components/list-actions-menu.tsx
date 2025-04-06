@@ -15,6 +15,11 @@ import {
   Users,
 } from "lucide-react";
 
+/**
+ * ListActionsMenu renders a dropdown menu with context-specific actions for a list item.
+ *  Actions include favoriting, saving as template, sharing publicly, using a template, deleting, and adding to shared lists.
+ */
+
 export function ListActionsMenu({
   list,
   onToggleFavorite,
@@ -23,7 +28,7 @@ export function ListActionsMenu({
   onDelete,
   onUseTemplate,
   onAddToShared,
-  onRemoveFromShared
+  onRemoveFromShared,
 }: {
   list: any;
   onToggleFavorite?: () => void;
@@ -57,6 +62,7 @@ export function ListActionsMenu({
             Save as Template
           </DropdownMenuItem>
         )}
+        {/* Show 'Add to Shared Lists' only if list isn't already shared */}
         {onAddToShared && !list.is_shared && (
           <DropdownMenuItem onClick={onAddToShared}>
             <Users className="mr-2 h-4 w-4" />
@@ -75,6 +81,7 @@ export function ListActionsMenu({
             Use Template
           </DropdownMenuItem>
         )}
+        {/* Show delete option only if permitted by parent (typically owner) */}
         {onDelete && (
           <DropdownMenuItem onClick={onDelete} className="text-red-600">
             <Trash2 className="mr-2 h-4 w-4" />

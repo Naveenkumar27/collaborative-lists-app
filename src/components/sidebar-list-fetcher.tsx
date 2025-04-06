@@ -1,3 +1,7 @@
+// SidebarListFetcher manages and displays personal, shared, and template lists.
+// It handles actions like marking lists as favorite, template, shared, or public,
+// and allows duplication or deletion of lists depending on permissions.
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,7 +11,13 @@ import { Folder, Users, LayoutTemplate } from "lucide-react";
 import { useUser } from "@/contexts/user-context";
 import { SidebarListSection } from "@/components/sidebar-list-section";
 
+
+/**
+ * SidebarListFetcher manages and displays personal, shared, and template lists.
+ * It handles actions like marking lists as favorite, template, shared, or public, and allows duplication or deletion of lists depending on permissions.
+ */
 export function SidebarListFetcher() {
+  // Store different list views separately
   const [personalLists, setPersonalLists] = useState<any[]>([]);
   const [sharedLists, setSharedLists] = useState<any[]>([]);
   const [templateLists, setTemplateLists] = useState<any[]>([]);
@@ -15,22 +25,26 @@ export function SidebarListFetcher() {
   const user = useUser();
   const { toast } = useToast();
 
+  // Fetch lists and categorize by type: personal, shared, or template
   const fetchLists = async (showLoading = false) => {
     if (showLoading) setLoading(true);
     if (!user) return;
 
     try {
+      // Personal: private lists owned by the user
       const { data: personal } = await supabase
         .from("lists")
         .select("*")
         .eq("user_id", user.id)
         .eq("is_shared", false);
 
+      // Shared: lists visible to all users
       const { data: shared } = await supabase
         .from("lists")
         .select("*")
         .eq("is_shared", true);
 
+      // Templates: reusable list blueprints (only the user's own)
       const { data: templates } = await supabase
         .from("lists")
         .select("*")
@@ -58,6 +72,7 @@ export function SidebarListFetcher() {
 
   const handleListCreated = () => fetchLists();
 
+  // Toggle the favorite status of a list
   const toggleFavorite = async (id: string, current: boolean) => {
     const { error } = await supabase
       .from("lists")
@@ -70,11 +85,11 @@ export function SidebarListFetcher() {
     }
   };
 
+  // Clone a list and its items into a new list marked as a template
   const markAsTemplate = async (id: string) => {
     const original = [...personalLists, ...sharedLists].find((l) => l.id === id);
     if (!original) return;
 
-    // Check if a template with the same name already exists
     const existingTemplate = templateLists.find((t) => t.name === `${original.name} (T)`);
     if (existingTemplate) {
       toast({ title: "Template already exists!", description: "You already have a template with this name." });
@@ -114,6 +129,7 @@ export function SidebarListFetcher() {
     fetchLists();
   };
 
+  // Delete a list if the user owns it
   const deleteList = async (id: string) => {
     const list = [...personalLists, ...sharedLists, ...templateLists].find((l) => l.id === id);
     if (!list) return;
@@ -133,6 +149,7 @@ export function SidebarListFetcher() {
     }
   };
 
+  // Remove template flag only, not the actual list
   const deleteTemplateOnly = async (id: string) => {
     const { error } = await supabase.from("lists").delete().eq("id", id);
 
@@ -142,6 +159,7 @@ export function SidebarListFetcher() {
     }
   };
 
+  // Create a new list and copy over items from a selected template
   const useTemplate = async (templateId: string, name: string) => {
     if (!user) return;
 
@@ -178,6 +196,7 @@ export function SidebarListFetcher() {
     fetchLists();
   };
 
+  // Toggle a list's public visibility and handle link copying
   const togglePublic = async (id: string, current: boolean) => {
     const { error } = await supabase
       .from("lists")
@@ -201,6 +220,7 @@ export function SidebarListFetcher() {
     }
   };
 
+  // Allow users to mark their list as shared with roommates
   const addToSharedLists = async (id: string) => {
     const { error } = await supabase
       .from("lists")
